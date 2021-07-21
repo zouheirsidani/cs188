@@ -62,14 +62,16 @@ class ValueIterationAgent(ValueEstimationAgent):
     def runValueIteration(self):
         # Write value iteration code here
         "*** YOUR CODE HERE ***"
+        runtime = self.iterations
+        value = {}
         states = self.mdp.getStates()
-        for state in states:
-            if not self.mdp.isTerminal(state):                
-                self.values[state]=self.getQValue(state,self.getAction(state))
-        
-        self.iterations = self.iterations-1
-        if self.iterations>1:
-            self.runValueIteration()
+        for i in range(runtime):
+            for state in states:
+                if not self.mdp.isTerminal(state):
+                    value[state] = self.getQValue(state,self.getAction(state))
+            for state in states:
+                if not self.mdp.isTerminal(state):
+                    self.values[state] = value[state]
 
 
     def getValue(self, state):
@@ -89,7 +91,7 @@ class ValueIterationAgent(ValueEstimationAgent):
         Q = 0
         for s in possible:
             reward = self.mdp.getReward(state, action, s[0])
-            Q = Q+s[1]*(reward+self.discount*self.values[state])        
+            Q = Q+s[1]*(reward+self.discount*self.values[s[0]])        
         return Q
         util.raiseNotDefined()
 
@@ -153,6 +155,12 @@ class AsynchronousValueIterationAgent(ValueIterationAgent):
 
     def runValueIteration(self):
         "*** YOUR CODE HERE ***"
+        runtime = self.iterations
+        
+        states = self.mdp.getStates()
+        for i in range(runtime):
+            if not self.mdp.isTerminal(states[i%len(states)]):
+                self.values[states[i%len(states)]] = self.getQValue(states[i%len(states)],self.getAction(states[i%len(states)]))
 
 
 class PrioritizedSweepingValueIterationAgent(AsynchronousValueIterationAgent):
@@ -174,4 +182,30 @@ class PrioritizedSweepingValueIterationAgent(AsynchronousValueIterationAgent):
 
     def runValueIteration(self):
         "*** YOUR CODE HERE ***"
+        pqueue = util.PriorityQueue()
+        states = self.mdp.getStates()
+        predecessors = {}
+        for state in states:
+            actions = self.mdp.getPossibleActions(state)
+            for a in actions:
+                possible = self.mdp.getTransitionStatesAndProbs(state, a)
+                for s in possible:
+                    if s[0] not in predecessors.keys():
+                        predecessors[s[0]]=[]
+                    if state not in predecessors[s[0]] and state!=s[0]:
+                        predecessors[s[0]].append(state)
+        for state in states:
+            if not self.mdp.isTerminal(state):
+                diff = abs(self.values[state]-self.getQValue(state,self.getAction(state)))
+                pqueue.push(state,-diff)
+        for iteration in range(self.iterations):
+            if not pqueue.isEmpty():
+                s = pqueue.pop()
+                if not self.mdp.isTerminal(s):
+                    self.values[s] = self.getQValue(s,self.getAction(s))
+                for p in predecessors[s]:
+                    if not self.mdp.isTerminal(p):
+                        diff = abs(self.values[p]-self.getQValue(p,self.getAction(p)))
+                        if diff>self.theta:
+                            pqueue.update(p,-diff)
 
