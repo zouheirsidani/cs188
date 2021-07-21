@@ -62,9 +62,10 @@ class ValueIterationAgent(ValueEstimationAgent):
     def runValueIteration(self):
         # Write value iteration code here
         "*** YOUR CODE HERE ***"
-        self.values[(3,2)]=1
-        self.values[(3,1)]=-1
-
+        states = self.mdp.getStates()
+        for state in states:
+            if not self.mdp.isTerminal(state):                
+                self.values[state]=self.getQValue(state,self.getAction(state))
         
         self.iterations = self.iterations-1
         if self.iterations>1:
