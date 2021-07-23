@@ -62,6 +62,7 @@ class ValueIterationAgent(ValueEstimationAgent):
     def runValueIteration(self):
         # Write value iteration code here
         "*** YOUR CODE HERE ***"
+        
         runtime = self.iterations
         value = {}
         states = self.mdp.getStates()
@@ -72,7 +73,7 @@ class ValueIterationAgent(ValueEstimationAgent):
             for state in states:
                 if not self.mdp.isTerminal(state):
                     self.values[state] = value[state]
-
+        
 
     def getValue(self, state):
         """
@@ -87,6 +88,7 @@ class ValueIterationAgent(ValueEstimationAgent):
           value function stored in self.values.
         """
         "*** YOUR CODE HERE ***"
+        
         possible = self.mdp.getTransitionStatesAndProbs(state, action)
         Q = 0
         for s in possible:
@@ -114,6 +116,7 @@ class ValueIterationAgent(ValueEstimationAgent):
                 action = a
                 value = value1
         return action
+        
         util.raiseNotDefined()
 
     def getPolicy(self, state):
@@ -162,7 +165,6 @@ class AsynchronousValueIterationAgent(ValueIterationAgent):
             if not self.mdp.isTerminal(states[i%len(states)]):
                 self.values[states[i%len(states)]] = self.getQValue(states[i%len(states)],self.getAction(states[i%len(states)]))
 
-
 class PrioritizedSweepingValueIterationAgent(AsynchronousValueIterationAgent):
     """
         * Please read learningAgents.py before reading this.*
@@ -192,7 +194,7 @@ class PrioritizedSweepingValueIterationAgent(AsynchronousValueIterationAgent):
                 for s in possible:
                     if s[0] not in predecessors.keys():
                         predecessors[s[0]]=[]
-                    if state not in predecessors[s[0]] and state!=s[0]:
+                    if state not in predecessors[s[0]] and s[1]>0:
                         predecessors[s[0]].append(state)
         for state in states:
             if not self.mdp.isTerminal(state):
@@ -204,8 +206,10 @@ class PrioritizedSweepingValueIterationAgent(AsynchronousValueIterationAgent):
                 if not self.mdp.isTerminal(s):
                     self.values[s] = self.getQValue(s,self.getAction(s))
                 for p in predecessors[s]:
-                    if not self.mdp.isTerminal(p):
                         diff = abs(self.values[p]-self.getQValue(p,self.getAction(p)))
                         if diff>self.theta:
                             pqueue.update(p,-diff)
+
+
+                    
 
